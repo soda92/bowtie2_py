@@ -1,5 +1,4 @@
-def main():
-    print("Hello from bowtie2-py!")
+from bowtie2_py.bowtie2 import main
 
 
 if __name__ == "__main__":

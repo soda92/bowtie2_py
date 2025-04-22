@@ -1,0 +1,7 @@
+version = 1
+requires-python = ">=3.11"
+
+[[package]]
+name = "bowtie2-py"
+version = "2025.4.22.0"
+source = { editable = "." }

@@ -49,9 +49,9 @@ prog_name = None
 host = socket.gethostname()
 temp_dir_base = tempfile.gettempdir()
 os_is_nix = platform.system() != "Windows"
-align_bin_s_base = 'bowtie2-align-s'
-build_bin_base = 'bowtie2-build'
-align_bin_l_base = 'bowtie2-align-l'
+align_bin_s_base = 'bin/bowtie2-align-s'
+build_bin_base = 'bin/bowtie2-build'
+align_bin_l_base = 'bin/bowtie2-align-l'
 idx_ext_l = 'bt2l'
 idx_ext_s = 'bt2'
 
@@ -120,7 +120,7 @@ def _cleanup():
              #     os.kill(pid, signal.SIGKILL)
              # except OSError: pass
 
-
+    keep_te
     # Delete temporary files/pipes
     if not keep_temps:
         for item in to_delete:
@@ -655,7 +655,7 @@ def _open_compressed_output(filename, compression, stream_name, compressor_procs
 
 
 # --- Main Execution ---
-if __name__ == "__main__":
+def main():
     import io # Needed for TextIOWrapper
 
     _resolve_script_path() # Determine script location and binary paths

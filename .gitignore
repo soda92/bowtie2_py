@@ -1,5 +1,6 @@
 # downloaded releases
 /bowtie2-*
+bowtie2_py/bin
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
