@@ -36,6 +36,14 @@ import tempfile
 import signal
 import platform
 from pathlib import Path
+import re
+import gzip
+
+
+def fail(message):
+    print(message, file=sys.stderr)
+    exit(-1)
+
 
 host = platform.node()
 script_path = Path(__file__).resolve().parent
@@ -46,24 +54,35 @@ while prog.is_file() and prog.is_symlink():
     script_path = prog.parent
 
 vol = None  # Python doesn't really have volume in the same way
-os_is_nix = os.name != 'nt'
-align_bin_s = 'bowtie2-align-s' if os_is_nix else 'bowtie2-align-s.exe'
-build_bin = 'bowtie2-build' if os_is_nix else 'bowtie2-build.exe'
-align_bin_l = 'bowtie2-align-l' if os_is_nix else 'bowtie2-align-l.exe'
+os_is_nix = os.name != "nt"
+align_bin_s = "bowtie2-align-s" if os_is_nix else "bowtie2-align-s.exe"
+build_bin = "bowtie2-build" if os_is_nix else "bowtie2-build.exe"
+align_bin_l = "bowtie2-align-l" if os_is_nix else "bowtie2-align-l.exe"
 align_prog_s = script_path / align_bin_s
 align_prog_l = script_path / align_bin_l
 align_prog = align_prog_s
-idx_ext_l = 'bt2l'
-idx_ext_s = 'bt2'
+idx_ext_l = "bt2l"
+idx_ext_s = "bt2"
 idx_ext = idx_ext_s
 signo = {}
 signame = []
 
 params_to_quote = {
-    '-S': 1, '-U': 1, '-1': 1, '-2': 1, '-x': 1, '-b': 1,
-    '--interleaved': 1, '--rg': 1, '--rg-id': 1,
-    '--tab5': 1, '--tab6': 1, '--sam-acc': 1, '--bam': 1
+    "-S": 1,
+    "-U": 1,
+    "-1": 1,
+    "-2": 1,
+    "-x": 1,
+    "-b": 1,
+    "--interleaved": 1,
+    "--rg": 1,
+    "--rg-id": 1,
+    "--tab5": 1,
+    "--tab6": 1,
+    "--sam-acc": 1,
+    "--bam": 1,
 }
+
 
 def quote_params(param_list):
     quoting = 0
@@ -74,6 +93,7 @@ def quote_params(param_list):
             continue
         if param_list[i] in params_to_quote:
             quoting = 1
+
 
 # Get signal info (Python's signal module is more direct)
 for name in signal.valid_signals():
@@ -89,30 +109,36 @@ for name in signal.valid_signals():
         pass
 
 if not os.access(align_prog, os.X_OK):
-    fail(f"Expected bowtie2 to be in same directory with bowtie2-align:\n{script_path}\n")
+    fail(
+        f"Expected bowtie2 to be in same directory with bowtie2-align:\n{script_path}\n"
+    )
+
 
 # Get description of arguments from Bowtie 2
 def get_bt2_desc(desc):
     cmd = [str(align_prog), "--wrapper", "basic-0", "--arg-desc"]
     try:
         process = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        for line in process.stdout.strip().split('\n'):
+        for line in process.stdout.strip().split("\n"):
             if not line.strip():
                 continue
-            parts = line.split('\t')
+            parts = line.split("\t")
             desc[parts[0]] = parts[1]
     except subprocess.CalledProcessError as e:
         fail(f"Description of arguments failed!\n{e}")
     except FileNotFoundError:
         fail(f"Could not find executable: {cmd[0]}\n")
 
+
 desc = {}
 wrapped = {"1": 1, "2": 1}
 get_bt2_desc(desc)
 
+
 # Given an option like -1, determine whether it's wrapped
 def is_wrapped(opt):
     return opt in wrapped
+
 
 debug = 0
 sanitized = 0
@@ -121,6 +147,7 @@ read_compress = {}
 cap_out = None  # Filename for passthrough
 no_unal = 0
 large_idx = 0
+
 
 def handle_un_or_al(option, value):
     match = re.match(r"((?:al|un)(?:-conc|-mates)?)(?:-(gz|bz2|lz4|zst))?", option)
@@ -136,6 +163,7 @@ def handle_un_or_al(option, value):
             read_compress[name] = "lz4"
         elif compression_type == "zst":
             read_compress[name] = "zstd"
+
 
 unps = []
 mate1s = []
@@ -157,16 +185,52 @@ log_fname = None
 help_flag = 0
 
 long_options = [
-    "1=", "2=", "reads=", "U=", "tab5=", "tab6=", "interleaved=", "b=",
-    "temp-directory=", "bam", "no-named-pipes", "ref-string=",
-    "reference-string=", "keep", "verbose", "debug", "sanitized",
-    "large-index", "no-unal", "un=", "un-gz=", "un-bz2=", "un-lz4=",
-    "un-zst=", "al=", "al-gz=", "al-bz2=", "al-lz4=", "al-zst=",
-    "un-conc=", "un-conc-gz=", "un-conc-bz2=", "un-conc-lz4=",
-    "un-conc-zst=", "al-conc=", "al-conc-gz=", "al-conc-bz2=",
-    "al-conc-lz4=", "al-conc-zst=", "un-mates=", "un-mates-gz=",
-    "un-mates-bz2=", "un-mates-lz4=", "un-mates-zst=", "log-file=",
-    "help"
+    "1=",
+    "2=",
+    "reads=",
+    "U=",
+    "tab5=",
+    "tab6=",
+    "interleaved=",
+    "b=",
+    "temp-directory=",
+    "bam",
+    "no-named-pipes",
+    "ref-string=",
+    "reference-string=",
+    "keep",
+    "verbose",
+    "debug",
+    "sanitized",
+    "large-index",
+    "no-unal",
+    "un=",
+    "un-gz=",
+    "un-bz2=",
+    "un-lz4=",
+    "un-zst=",
+    "al=",
+    "al-gz=",
+    "al-bz2=",
+    "al-lz4=",
+    "al-zst=",
+    "un-conc=",
+    "un-conc-gz=",
+    "un-conc-bz2=",
+    "un-conc-lz4=",
+    "un-conc-zst=",
+    "al-conc=",
+    "al-conc-gz=",
+    "al-conc-bz2=",
+    "al-conc-lz4=",
+    "al-conc-zst=",
+    "un-mates=",
+    "un-mates-gz=",
+    "un-mates-bz2=",
+    "un-mates-lz4=",
+    "un-mates-zst=",
+    "log-file=",
+    "help",
 ]
 try:
     opts, args = getopt.getopt(sys.argv[1:], "1:2:U:b:", long_options)
@@ -178,19 +242,19 @@ bt2_args = list(args)
 
 for opt, arg in opts:
     if opt in ("-1"):
-        mate1s.extend(arg.split(','))
+        mate1s.extend(arg.split(","))
     elif opt in ("-2"):
-        mate2s.extend(arg.split(','))
+        mate2s.extend(arg.split(","))
     elif opt in ("-U", "--reads"):
-        unps.extend(arg.split(','))
+        unps.extend(arg.split(","))
     elif opt == "--tab5":
-        tab5_mates.extend(arg.split(','))
+        tab5_mates.extend(arg.split(","))
     elif opt == "--tab6":
-        tab6_mates.extend(arg.split(','))
+        tab6_mates.extend(arg.split(","))
     elif opt == "--interleaved":
-        interleaved_mates.extend(arg.split(','))
+        interleaved_mates.extend(arg.split(","))
     elif opt in ("-b"):
-        bam_files.extend(arg.split(','))
+        bam_files.extend(arg.split(","))
     elif opt == "--temp-directory":
         temp_dir = arg
     elif opt == "--bam":
@@ -296,11 +360,12 @@ old_stderr = None
 if log_fname:
     try:
         old_stderr_fileno = os.dup(sys.stderr.fileno())
-        old_stderr = open(os.fdopen(old_stderr_fileno, 'w'))
+        old_stderr = open(os.fdopen(old_stderr_fileno, "w"))
         sys.stderr.close()
         sys.stderr = open(log_fname, "w")
     except OSError as e:
         fail(f"Cannot redirect to log file {log_fname}.\n{e}")
+
 
 def which(exec_name):
     for path in os.environ["PATH"].split(os.pathsep):
@@ -308,6 +373,7 @@ def which(exec_name):
         if file_path.is_file() and os.access(file_path, os.X_OK):
             return True
     return False
+
 
 def cat_file(ifn, ofh):
     if ifn.endswith(".gz"):
@@ -321,19 +387,25 @@ def cat_file(ifn, ofh):
             fail(f"Could not open read file: {ifn}\n")
     elif ifn.endswith(".bz2"):
         try:
-            process = subprocess.run(["bzip2", "-dc", ifn], capture_output=True, text=True, check=True)
+            process = subprocess.run(
+                ["bzip2", "-dc", ifn], capture_output=True, text=True, check=True
+            )
             ofh.write(process.stdout)
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             fail(f"Could not open bzip2ed read file: {ifn}\n{e}")
     elif ifn.endswith(".lz4"):
         try:
-            process = subprocess.run(["lz4", "-dc", ifn], capture_output=True, text=True, check=True)
+            process = subprocess.run(
+                ["lz4", "-dc", ifn], capture_output=True, text=True, check=True
+            )
             ofh.write(process.stdout)
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             fail(f"Could not open lz4ed read file: {ifn}\n{e}")
     elif ifn.endswith(".zst"):
         try:
-            process = subprocess.run(["zstd", "-dfc", ifn], capture_output=True, text=True, check=True)
+            process = subprocess.run(
+                ["zstd", "-dfc", ifn], capture_output=True, text=True, check=True
+            )
             ofh.write(process.stdout)
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             fail(f"Could not open zstded read file: {ifn}\n{e}")
@@ -344,6 +416,7 @@ def cat_file(ifn, ofh):
                     ofh.write(line)
         except FileNotFoundError:
             fail(f"Could not open read file: {ifn}\n")
+
 
 def write_files(input_files, output_file, no_pipes):
     if not no_pipes:
@@ -369,6 +442,7 @@ def write_files(input_files, output_file, no_pipes):
             fail(f"Can't open '{output_file}' for writing.\n{e}")
             if not no_pipes:
                 os._exit(1)
+
 
 def maybe_wrap_input(orig_m1s, orig_m2s, ext):
     m1s = []
