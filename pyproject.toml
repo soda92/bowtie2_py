@@ -16,12 +16,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 ignore-vcs = true
 packages = ["bowtie2_py"]
-exclude = ["__pycache__", "*.pyc", "*.exe~", "*.syso", "*.sam", "*.bt2"]
+exclude = ["__pycache__", "*.pyc", "*.exe~", "*.syso", "*.sam"]
 
 [tool.hatch.build.targets.wheel]
 ignore-vcs = true
 packages = ["bowtie2_py"]
-exclude = ["__pycache__", "*.pyc", "*.exe~", "*.syso", "*.sam", "*.bt2"]
+exclude = ["__pycache__", "*.pyc", "*.exe~", "*.syso", "*.sam"]
 
 [project.scripts]
 bowtie2 = "bowtie2_py.main:main"
