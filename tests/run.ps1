@@ -1,0 +1,1 @@
+bowtie2 -x ${Env:USERPROFILE}/Downloads/GRCh38_noalt_as/GRCh38_noalt_as -U D:/src/fig_remake/data/SRR1810900.fastq.gz -S SRR1810900.sam --threads 8  --no-mixed --no-discordant -k 1

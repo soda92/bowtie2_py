@@ -1,0 +1,5 @@
+#%%
+import platform
+# %%
+platform.system()
+# %%

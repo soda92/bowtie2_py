@@ -48,10 +48,12 @@ script_path = None
 prog_name = None
 host = socket.gethostname()
 temp_dir_base = tempfile.gettempdir()
+keep_temps = False
+verbose_mode = False
 os_is_nix = platform.system() != "Windows"
-align_bin_s_base = 'bin/bowtie2-align-s'
-build_bin_base = 'bin/bowtie2-build'
-align_bin_l_base = 'bin/bowtie2-align-l'
+align_bin_s_base = 'bowtie2-align-s'
+build_bin_base = 'bowtie2-build'
+align_bin_l_base = 'bowtie2-align-l'
 idx_ext_l = 'bt2l'
 idx_ext_s = 'bt2'
 
@@ -120,7 +122,7 @@ def _cleanup():
              #     os.kill(pid, signal.SIGKILL)
              # except OSError: pass
 
-    keep_te
+
     # Delete temporary files/pipes
     if not keep_temps:
         for item in to_delete:
@@ -146,7 +148,7 @@ def _resolve_script_path():
                 target = os.path.join(os.path.dirname(prog), target)
             prog = os.path.abspath(target)
 
-        script_path = os.path.dirname(prog)
+        script_path = os.path.join(os.path.dirname(prog), "bin")
         prog_name = os.path.basename(prog)
 
         # Determine platform-specific binary names
@@ -801,6 +803,7 @@ def main():
     args, bt2_args = parser.parse_known_args(temp_all_args)
 
     # --- Set Global Flags ---
+    global verbose_mode, keep_temps, use_pipes, temp_dir
     verbose_mode = args.verbose
     keep_temps = args.keep
     use_pipes = not args.no_named_pipes

@@ -1,6 +1,9 @@
 # downloaded releases
 /bowtie2-*
 bowtie2_py/bin
+# binary files
+*.sam
+*.bt2
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
