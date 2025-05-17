@@ -28,6 +28,7 @@
 # 2. Redirecting output to various files
 # 3. Output directly to bam (via samtools)
 
+import io
 import sys
 import os
 import argparse
